@@ -169,9 +169,6 @@ BBAS3
 BBDC4
 ```
 
-O sistema adiciona automaticamente o sufixo `.SA`, utilizado pelo Yahoo Finance para representar ações negociadas na B3.
-
-
 ## Indicadores apresentados
 
 O dashboard calcula automaticamente:
