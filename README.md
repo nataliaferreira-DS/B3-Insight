@@ -97,7 +97,7 @@ Replay-Pregao-B3/
 ### 1. Clone o repositório
 
 ```bash
-git clone URL_DO_REPOSITORIO
+git https://github.com/nataliaferreira-DS/Replay-Pregao-B3.git
 ```
 
 ### 2. Entre na pasta do projeto
