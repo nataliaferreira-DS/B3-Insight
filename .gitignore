@@ -1,0 +1,21 @@
+# Ambiente virtual
+.venv/
+venv/
+
+# Arquivos temporários do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Arquivos do macOS
+.DS_Store
+
+# Configurações do VS Code
+.vscode/
+
+# Informações privadas do Streamlit
+.streamlit/secrets.toml
+
+# Arquivos temporários do Jupyter
+.ipynb_checkpoints/

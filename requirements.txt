@@ -1,0 +1,12 @@
+# Interface
+streamlit==1.60.0
+
+# Manipulação de dados
+pandas==3.0.5
+numpy==2.5.1
+
+# Visualização
+plotly==6.9.0
+
+# Dados financeiros
+yfinance==1.5.2
