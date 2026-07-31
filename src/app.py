@@ -373,8 +373,8 @@ def executar():
     )
 
     coluna5.metric(
-        "Volume total",
-        volume_formatado
+        "Volume total de ações",
+         volume_formatado
     )
 
     st.divider()

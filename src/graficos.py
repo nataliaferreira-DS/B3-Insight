@@ -36,8 +36,7 @@ def criar_grafico_candlestick(
         )
     )
 
-    # Adiciona a média móvel de 20 períodos,
-    # utilizada para observar movimentos mais recentes.
+    # Adiciona a média móvel de 20 períodos.
     fig.add_trace(
         go.Scatter(
             x=base[coluna_data],
@@ -48,8 +47,7 @@ def criar_grafico_candlestick(
         )
     )
 
-    # Adiciona a média móvel de 50 períodos,
-    # utilizada para observar uma tendência mais ampla.
+    # Adiciona a média móvel de 50 períodos.
     fig.add_trace(
         go.Scatter(
             x=base[coluna_data],
@@ -89,7 +87,8 @@ def criar_grafico_volume(
     coluna_data: str
 ) -> go.Figure:
     """
-    Cria o gráfico de barras do volume negociado.
+    Cria o gráfico de barras com a quantidade
+    de ações negociadas em cada período.
     """
 
     # Remove o sufixo técnico utilizado pelo Yahoo Finance.
@@ -113,7 +112,7 @@ def criar_grafico_volume(
     fig.update_layout(
         title=f"Volume negociado — {ticker_exibicao}",
         xaxis_title="Data e hora",
-        yaxis_title="Volume",
+        yaxis_title="Quantidade de ações",
         template="plotly_white",
         height=300,
         showlegend=False
@@ -137,20 +136,114 @@ def criar_grafico_comparacao(
 ) -> go.Figure:
     """
     Compara o desempenho normalizado da ação
-    com o desempenho do Ibovespa.
+    com o desempenho do Ibovespa utilizando
+    somente datas presentes nas duas séries.
     """
 
     # Remove o sufixo técnico utilizado pelo Yahoo Finance.
     ticker_exibicao = ticker.replace(".SA", "")
 
-    # Normaliza as duas séries para que ambas comecem em 100.
-    # Isso permite comparar desempenhos mesmo com preços diferentes.
-    desempenho_acao = normalizar_serie(
-        base["Close"]
+    # Seleciona somente as colunas necessárias.
+    dados_acao = base[
+        [coluna_data, "Close"]
+    ].copy()
+
+    dados_ibov = ibov[
+        [coluna_data_ibov, "Close"]
+    ].copy()
+
+    # Padroniza os nomes das colunas para permitir
+    # o cruzamento entre os dois DataFrames.
+    dados_acao = dados_acao.rename(
+        columns={
+            coluna_data: "Data",
+            "Close": "Acao"
+        }
     )
 
-    desempenho_ibov = normalizar_serie(
-        ibov["Close"]
+    dados_ibov = dados_ibov.rename(
+        columns={
+            coluna_data_ibov: "Data",
+            "Close": "Ibovespa"
+        }
+    )
+
+    # Converte as colunas para o formato datetime.
+    dados_acao["Data"] = pd.to_datetime(
+        dados_acao["Data"]
+    )
+
+    dados_ibov["Data"] = pd.to_datetime(
+        dados_ibov["Data"]
+    )
+
+    # Remove possíveis informações de fuso horário.
+    # Isso evita incompatibilidade durante o merge.
+    if dados_acao["Data"].dt.tz is not None:
+        dados_acao["Data"] = (
+            dados_acao["Data"]
+            .dt.tz_localize(None)
+        )
+
+    if dados_ibov["Data"].dt.tz is not None:
+        dados_ibov["Data"] = (
+            dados_ibov["Data"]
+            .dt.tz_localize(None)
+        )
+
+    # Mantém somente datas e horários presentes
+    # simultaneamente na ação e no Ibovespa.
+    comparacao = pd.merge(
+        dados_acao,
+        dados_ibov,
+        on="Data",
+        how="inner"
+    )
+
+    # Remove registros incompletos e organiza
+    # os dados em ordem cronológica.
+    comparacao = (
+        comparacao
+        .dropna()
+        .sort_values("Data")
+        .reset_index(drop=True)
+    )
+
+    # Caso não existam datas em comum, retorna um gráfico
+    # com uma mensagem em vez de provocar um erro.
+    if comparacao.empty:
+        fig = go.Figure()
+
+        fig.add_annotation(
+            text=(
+                "Não foi possível comparar a ação "
+                "com o Ibovespa neste período."
+            ),
+            x=0.5,
+            y=0.5,
+            xref="paper",
+            yref="paper",
+            showarrow=False
+        )
+
+        fig.update_layout(
+            title=f"{ticker_exibicao} vs. Ibovespa",
+            xaxis_title="Data e hora",
+            yaxis_title="Desempenho normalizado (base 100)",
+            template="plotly_white",
+            height=500
+        )
+
+        return fig
+
+    # Normaliza as séries somente depois que ação e Ibovespa
+    # estão alinhados pelas mesmas datas e horários.
+    comparacao["Acao_normalizada"] = normalizar_serie(
+        comparacao["Acao"]
+    )
+
+    comparacao["Ibovespa_normalizado"] = normalizar_serie(
+        comparacao["Ibovespa"]
     )
 
     # Inicializa o gráfico comparativo.
@@ -159,11 +252,8 @@ def criar_grafico_comparacao(
     # Adiciona a linha de desempenho da ação.
     fig.add_trace(
         go.Scatter(
-            x=base.loc[
-                desempenho_acao.index,
-                coluna_data
-            ],
-            y=desempenho_acao,
+            x=comparacao["Data"],
+            y=comparacao["Acao_normalizada"],
             mode="lines",
             name=ticker_exibicao
         )
@@ -172,23 +262,20 @@ def criar_grafico_comparacao(
     # Adiciona a linha de desempenho do Ibovespa.
     fig.add_trace(
         go.Scatter(
-            x=ibov.loc[
-                desempenho_ibov.index,
-                coluna_data_ibov
-            ],
-            y=desempenho_ibov,
+            x=comparacao["Data"],
+            y=comparacao["Ibovespa_normalizado"],
             mode="lines",
             name="Ibovespa"
         )
     )
 
-    # Adiciona uma linha de referência no nível inicial 100.
+    # Adiciona uma linha de referência na base inicial 100.
     fig.add_hline(
         y=100,
         line_dash="dash"
     )
 
-    # Define título, eixos, legenda e comportamento de interação.
+    # Define título, eixos, legenda e interação.
     fig.update_layout(
         title=f"{ticker_exibicao} vs. Ibovespa",
         xaxis_title="Data e hora",
