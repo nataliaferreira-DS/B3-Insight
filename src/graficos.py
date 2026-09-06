@@ -1,7 +1,113 @@
+import math
+
 import pandas as pd
 import plotly.graph_objects as go
 
 from indicadores import normalizar_serie
+
+
+MAX_PONTOS_GRAFICO = 500
+
+
+def preparar_dados_grafico(
+    base: pd.DataFrame,
+    coluna_data: str,
+    max_pontos: int = MAX_PONTOS_GRAFICO
+) -> pd.DataFrame:
+    """
+    Prepara uma cópia dos dados exclusivamente para visualização.
+
+    Quando o conjunto já possui uma quantidade confortável de pontos,
+    ele é mantido sem alterações. Em séries muito densas, os registros
+    são agrupados em blocos consecutivos preservando OHLC e volume.
+    Dessa forma, o dashboard continua usando os dados completos nos
+    indicadores, tabela e exportação, enquanto o gráfico permanece legível.
+    """
+
+    if base.empty:
+        return base.copy()
+
+    dados = base.copy()
+    dados[coluna_data] = pd.to_datetime(dados[coluna_data])
+    dados = dados.sort_values(coluna_data).reset_index(drop=True)
+
+    if len(dados) <= max_pontos:
+        return dados
+
+    tamanho_bloco = math.ceil(len(dados) / max_pontos)
+    dados["_grupo_grafico"] = dados.index // tamanho_bloco
+
+    agregacoes = {
+        coluna_data: "first",
+        "Open": "first",
+        "High": "max",
+        "Low": "min",
+        "Close": "last"
+    }
+
+    if "Volume" in dados.columns:
+        agregacoes["Volume"] = "sum"
+
+    dados = (
+        dados
+        .groupby("_grupo_grafico", as_index=False)
+        .agg(agregacoes)
+    )
+
+    # As médias são recalculadas apenas na versão visual agregada.
+    # A base original permanece inalterada para os demais indicadores.
+    dados["MM20"] = dados["Close"].rolling(
+        window=20,
+        min_periods=1
+    ).mean()
+
+    dados["MM50"] = dados["Close"].rolling(
+        window=50,
+        min_periods=1
+    ).mean()
+
+    return dados
+
+
+def configurar_eixo_tempo(
+    fig: go.Figure,
+    coluna_data: pd.Series,
+    mostrar_rangeslider: bool = False
+) -> None:
+    """Aplica uma configuração de eixo temporal mais limpa e responsiva."""
+
+    rangebreaks = []
+
+    if not coluna_data.empty:
+        datas = pd.to_datetime(coluna_data)
+        duracao = datas.max() - datas.min()
+
+        # Em períodos com vários dias, remove os espaços vazios
+        # correspondentes aos fins de semana.
+        if duracao >= pd.Timedelta(days=3):
+            rangebreaks.append(
+                dict(bounds=["sat", "mon"])
+            )
+
+    fig.update_xaxes(
+        rangeslider_visible=mostrar_rangeslider,
+        showgrid=True,
+        gridcolor="rgba(0, 0, 0, 0.08)",
+        nticks=10,
+        tickformatstops=[
+            dict(dtickrange=[None, 60 * 60 * 1000], value="%H:%M"),
+            dict(
+                dtickrange=[60 * 60 * 1000, 24 * 60 * 60 * 1000],
+                value="%d/%m %H:%M"
+            ),
+            dict(
+                dtickrange=[24 * 60 * 60 * 1000, "M1"],
+                value="%d/%m"
+            ),
+            dict(dtickrange=["M1", None], value="%b/%Y")
+        ],
+        rangebreaks=rangebreaks
+    )
 
 
 def criar_grafico_candlestick(
@@ -15,67 +121,89 @@ def criar_grafico_candlestick(
     com as médias móveis de 20 e 50 períodos.
     """
 
-    # Remove o sufixo técnico utilizado pelo Yahoo Finance
-    # para apresentar o ticker de forma mais limpa.
     ticker_exibicao = ticker.replace(".SA", "")
+    base_grafico = preparar_dados_grafico(
+        base,
+        coluna_data
+    )
 
-    # Inicializa o gráfico que receberá as velas
-    # e as linhas das médias móveis.
     fig = go.Figure()
 
-    # Adiciona as velas com os preços de abertura,
-    # máxima, mínima e fechamento.
     fig.add_trace(
         go.Candlestick(
-            x=base[coluna_data],
-            open=base["Open"],
-            high=base["High"],
-            low=base["Low"],
-            close=base["Close"],
-            name=ticker_exibicao
+            x=base_grafico[coluna_data],
+            open=base_grafico["Open"],
+            high=base_grafico["High"],
+            low=base_grafico["Low"],
+            close=base_grafico["Close"],
+            name=ticker_exibicao,
+            increasing_line_color="#16a34a",
+            decreasing_line_color="#dc2626",
+            increasing_fillcolor="#22c55e",
+            decreasing_fillcolor="#ef4444"
         )
     )
 
-    # Adiciona a média móvel de 20 períodos.
     fig.add_trace(
         go.Scatter(
-            x=base[coluna_data],
-            y=base["MM20"],
+            x=base_grafico[coluna_data],
+            y=base_grafico["MM20"],
             mode="lines",
             name="MM20",
-            line=dict(width=2)
+            line=dict(width=1.8),
+            connectgaps=False
         )
     )
 
-    # Adiciona a média móvel de 50 períodos.
     fig.add_trace(
         go.Scatter(
-            x=base[coluna_data],
-            y=base["MM50"],
+            x=base_grafico[coluna_data],
+            y=base_grafico["MM50"],
             mode="lines",
             name="MM50",
-            line=dict(width=2)
+            line=dict(width=1.8),
+            connectgaps=False
         )
     )
 
-    # Define título, eixos, legenda e aparência geral.
     fig.update_layout(
-        title=f"{ticker_exibicao} — Candlestick ({periodo})",
-        xaxis_title="Data e hora",
+        title=dict(
+            text=f"{ticker_exibicao} — Candlestick ({periodo})",
+            x=0.01,
+            xanchor="left"
+        ),
+        xaxis_title=None,
         yaxis_title="Preço (R$)",
         template="plotly_white",
-        height=600,
+        height=620,
+        hovermode="x unified",
+        margin=dict(l=20, r=20, t=65, b=20),
         legend=dict(
             orientation="h",
-            y=-0.22,
-            x=0
+            y=1.04,
+            yanchor="bottom",
+            x=0,
+            xanchor="left"
+        ),
+        hoverlabel=dict(
+            bgcolor="white",
+            font_size=12
         )
     )
 
-    # Mantém o seletor inferior para facilitar
-    # a navegação pelo período analisado.
-    fig.update_xaxes(
-        rangeslider_visible=True
+    configurar_eixo_tempo(
+        fig,
+        base_grafico[coluna_data],
+        mostrar_rangeslider=False
+    )
+
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor="rgba(0, 0, 0, 0.08)",
+        zeroline=False,
+        tickprefix="R$ ",
+        tickformat=".2f",
+        fixedrange=False
     )
 
     return fig
@@ -91,37 +219,55 @@ def criar_grafico_volume(
     de ações negociadas em cada período.
     """
 
-    # Remove o sufixo técnico utilizado pelo Yahoo Finance.
     ticker_exibicao = ticker.replace(".SA", "")
+    base_grafico = preparar_dados_grafico(
+        base,
+        coluna_data
+    )
 
-    # Inicializa o gráfico de volume.
     fig = go.Figure()
 
-    # Adiciona as barras somente quando a coluna
-    # de volume está disponível no DataFrame.
-    if "Volume" in base.columns:
+    if "Volume" in base_grafico.columns:
         fig.add_trace(
             go.Bar(
-                x=base[coluna_data],
-                y=base["Volume"],
-                name="Volume"
+                x=base_grafico[coluna_data],
+                y=base_grafico["Volume"],
+                name="Volume",
+                marker_line_width=0,
+                hovertemplate=(
+                    "%{x}<br>Volume: %{y:,.0f}"
+                    "<extra></extra>"
+                )
             )
         )
 
-    # Define título, eixos e aparência geral do gráfico.
     fig.update_layout(
-        title=f"Volume negociado — {ticker_exibicao}",
-        xaxis_title="Data e hora",
+        title=dict(
+            text=f"Volume negociado — {ticker_exibicao}",
+            x=0.01,
+            xanchor="left"
+        ),
+        xaxis_title=None,
         yaxis_title="Quantidade de ações",
         template="plotly_white",
-        height=300,
-        showlegend=False
+        height=320,
+        showlegend=False,
+        bargap=0.08,
+        margin=dict(l=20, r=20, t=55, b=20),
+        hovermode="x"
     )
 
-    # Remove o seletor inferior, pois ele não é necessário
-    # no gráfico de volume.
-    fig.update_xaxes(
-        rangeslider_visible=False
+    configurar_eixo_tempo(
+        fig,
+        base_grafico[coluna_data],
+        mostrar_rangeslider=False
+    )
+
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor="rgba(0, 0, 0, 0.08)",
+        zeroline=False,
+        tickformat="~s"
     )
 
     return fig
@@ -140,10 +286,8 @@ def criar_grafico_comparacao(
     somente datas presentes nas duas séries.
     """
 
-    # Remove o sufixo técnico utilizado pelo Yahoo Finance.
     ticker_exibicao = ticker.replace(".SA", "")
 
-    # Seleciona somente as colunas necessárias.
     dados_acao = base[
         [coluna_data, "Close"]
     ].copy()
@@ -152,8 +296,6 @@ def criar_grafico_comparacao(
         [coluna_data_ibov, "Close"]
     ].copy()
 
-    # Padroniza os nomes das colunas para permitir
-    # o cruzamento entre os dois DataFrames.
     dados_acao = dados_acao.rename(
         columns={
             coluna_data: "Data",
@@ -168,7 +310,6 @@ def criar_grafico_comparacao(
         }
     )
 
-    # Converte as colunas para o formato datetime.
     dados_acao["Data"] = pd.to_datetime(
         dados_acao["Data"]
     )
@@ -177,8 +318,6 @@ def criar_grafico_comparacao(
         dados_ibov["Data"]
     )
 
-    # Remove possíveis informações de fuso horário.
-    # Isso evita incompatibilidade durante o merge.
     if dados_acao["Data"].dt.tz is not None:
         dados_acao["Data"] = (
             dados_acao["Data"]
@@ -191,8 +330,6 @@ def criar_grafico_comparacao(
             .dt.tz_localize(None)
         )
 
-    # Mantém somente datas e horários presentes
-    # simultaneamente na ação e no Ibovespa.
     comparacao = pd.merge(
         dados_acao,
         dados_ibov,
@@ -200,8 +337,6 @@ def criar_grafico_comparacao(
         how="inner"
     )
 
-    # Remove registros incompletos e organiza
-    # os dados em ordem cronológica.
     comparacao = (
         comparacao
         .dropna()
@@ -209,8 +344,6 @@ def criar_grafico_comparacao(
         .reset_index(drop=True)
     )
 
-    # Caso não existam datas em comum, retorna um gráfico
-    # com uma mensagem em vez de provocar um erro.
     if comparacao.empty:
         fig = go.Figure()
 
@@ -236,8 +369,6 @@ def criar_grafico_comparacao(
 
         return fig
 
-    # Normaliza as séries somente depois que ação e Ibovespa
-    # estão alinhados pelas mesmas datas e horários.
     comparacao["Acao_normalizada"] = normalizar_serie(
         comparacao["Acao"]
     )
@@ -246,54 +377,65 @@ def criar_grafico_comparacao(
         comparacao["Ibovespa"]
     )
 
-    # Inicializa o gráfico comparativo.
     fig = go.Figure()
 
-    # Adiciona a linha de desempenho da ação.
     fig.add_trace(
         go.Scatter(
             x=comparacao["Data"],
             y=comparacao["Acao_normalizada"],
             mode="lines",
-            name=ticker_exibicao
+            name=ticker_exibicao,
+            line=dict(width=2)
         )
     )
 
-    # Adiciona a linha de desempenho do Ibovespa.
     fig.add_trace(
         go.Scatter(
             x=comparacao["Data"],
             y=comparacao["Ibovespa_normalizado"],
             mode="lines",
-            name="Ibovespa"
+            name="Ibovespa",
+            line=dict(width=2)
         )
     )
 
-    # Adiciona uma linha de referência na base inicial 100.
     fig.add_hline(
         y=100,
-        line_dash="dash"
+        line_dash="dash",
+        opacity=0.5
     )
 
-    # Define título, eixos, legenda e interação.
     fig.update_layout(
-        title=f"{ticker_exibicao} vs. Ibovespa",
-        xaxis_title="Data e hora",
+        title=dict(
+            text=f"{ticker_exibicao} vs. Ibovespa",
+            x=0.01,
+            xanchor="left"
+        ),
+        xaxis_title=None,
         yaxis_title="Desempenho normalizado (base 100)",
         template="plotly_white",
         height=500,
         hovermode="x unified",
+        margin=dict(l=20, r=20, t=60, b=20),
         legend=dict(
             orientation="h",
-            y=-0.22,
-            x=0
+            y=1.04,
+            yanchor="bottom",
+            x=0,
+            xanchor="left"
         )
     )
 
-    # Remove o seletor inferior para manter
-    # o gráfico comparativo mais limpo.
-    fig.update_xaxes(
-        rangeslider_visible=False
+    configurar_eixo_tempo(
+        fig,
+        comparacao["Data"],
+        mostrar_rangeslider=False
+    )
+
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor="rgba(0, 0, 0, 0.08)",
+        zeroline=False
     )
 
     return fig
