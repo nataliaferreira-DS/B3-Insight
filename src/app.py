@@ -52,9 +52,10 @@ def aplicar_estilo() -> None:
         }
 
         .block-container {
-            max-width: 1380px;
-            padding-top: 2rem;
-            padding-bottom: 3rem;
+        max-width: 1380px;
+        padding-top: 4.5rem;
+        padding-bottom: 3rem;
+   
         }
 
         h1, h2, h3 {
@@ -209,14 +210,23 @@ def aplicar_estilo() -> None:
         }
 
         [data-testid="stSidebar"] .stButton > button {
-            background: #eef4f8;
-            color: #13283b;
-            border: none;
+        background: #eef4f8;
+        color: #13283b !important;
+        border: none;
+        }
+
+        [data-testid="stSidebar"] .stButton > button * {
+        color: #13283b !important;
         }
 
         [data-testid="stSidebar"] .stButton > button:hover {
-            background: #dfeaf2;
-            color: #13283b;
+        background: #dfeaf2;
+        color: #13283b !important;
+        }
+
+        [data-testid="stSidebar"] .stButton > button:hover * {
+        color: #13283b !important;
+      
         }
 
         @media (max-width: 900px) {
