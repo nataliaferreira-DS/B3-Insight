@@ -1,217 +1,151 @@
 # B3 Insight
 
-Dashboard interativo desenvolvido em Python para análise de ações negociadas na B3.
+Dashboard interativo desenvolvido em **Python** para análise de ações negociadas na B3.
 
 O projeto permite consultar dados históricos de ações brasileiras, visualizar indicadores de desempenho, analisar gráficos financeiros e comparar o desempenho do ativo com o Ibovespa.
 
+🔗 **Aplicação online:** https://b3-insight.streamlit.app/
+
+---
+
 ## Dashboard
 
-![Dashboard](imagens/dashboard.png)
+Visão geral da aplicação com indicadores do período e informações da empresa.
 
-## Comparação com o Ibovespa
+![Dashboard B3 Insight](imagens/dashboard.png)
 
-![Comparação](imagens/comparacao.png)
+---
+
+## Análise gráfica
+
+Visualização da evolução do preço por meio de gráfico **Candlestick**, acompanhado das médias móveis de 20 e 50 períodos (**MM20 e MM50**).
+
+![Gráfico Candlestick](imagens/candlestick.png)
+
+---
 
 ## Volume negociado
 
-![Volume](imagens/volume.png)
+Visualização do volume de ações negociadas ao longo do período selecionado.
 
-## Sobre o projeto
+![Volume negociado](imagens/volume.png)
 
-O B3 Insight é um projeto pessoal desenvolvido para aplicar conhecimentos de Python, análise de dados e visualização de informações no contexto do mercado financeiro.
+---
 
-A aplicação utiliza dados do Yahoo Finance e apresenta as informações em um dashboard desenvolvido com Streamlit. O usuário pode informar o ticker de uma ação negociada na B3, selecionar o período desejado e visualizar indicadores, gráficos e informações da empresa.
+## Comparação com o Ibovespa
 
-O objetivo do projeto é facilitar a análise de ativos por meio de uma interface simples, organizada e interativa.
+Comparação do desempenho da ação selecionada com o índice **Ibovespa**, utilizando séries normalizadas para facilitar a análise relativa.
+
+![Comparação com o Ibovespa](imagens/comparacao.png)
+
+---
 
 ## Funcionalidades
 
 - Consulta de ações negociadas na B3
-- Seleção do período de análise
-- Exibição da última cotação
-- Cálculo da variação percentual
-- Identificação do preço máximo e mínimo
-- Cálculo do volume negociado
-- Exibição de informações da empresa
-- Cálculo das médias móveis de 20 e 50 períodos
-- Gráfico de candlestick
-- Gráfico de volume
+- Seleção de diferentes períodos de análise
+- Indicadores de cotação, variação, máxima, mínima e volume
+- Informações da empresa
+- Gráfico Candlestick
+- Médias móveis MM20 e MM50
+- Análise de volume negociado
 - Comparação de desempenho com o Ibovespa
-- Visualização dos dados históricos
-- Download dos dados em formato CSV
+- Visualização de dados históricos
+- Exportação dos dados para CSV
+
+---
 
 ## Tecnologias utilizadas
 
 - Python
-- Streamlit
 - Pandas
-- NumPy
 - Plotly
+- Streamlit
 - yfinance
+- Git
+- GitHub
+
+---
 
 ## Estrutura do projeto
 
 ```text
 B3-Insight/
-│
 ├── dados/
-│   └── b3_insight.csv
-│
 ├── imagens/
 │   ├── dashboard.png
-│   ├── comparacao.png
-│   └── volume.png
-│
-├── notebooks/
-│
+│   ├── candlestick.png
+│   ├── volume.png
+│   └── comparacao.png
 ├── src/
 │   ├── app.py
 │   ├── config.py
 │   ├── dados.py
 │   ├── graficos.py
 │   └── indicadores.py
-│
 ├── .gitignore
 ├── README.md
 └── requirements.txt
 ```
 
-### Organização dos arquivos
-
-| Arquivo | Responsabilidade |
-|---|---|
-| `app.py` | Interface do dashboard e fluxo principal da aplicação |
-| `config.py` | Configurações gerais do projeto |
-| `dados.py` | Coleta, preparação e limpeza dos dados |
-| `indicadores.py` | Cálculo dos indicadores e formatação dos resultados |
-| `graficos.py` | Construção dos gráficos interativos |
+---
 
 ## Como executar o projeto
 
-### 1. Clone o repositório
+Clone o repositório:
 
 ```bash
 git clone https://github.com/nataliaferreira-DS/B3-Insight.git
 ```
 
-### 2. Entre na pasta do projeto
+Entre na pasta do projeto:
 
 ```bash
 cd B3-Insight
 ```
 
-### 3. Crie um ambiente virtual
-
-No macOS ou Linux:
+Crie um ambiente virtual:
 
 ```bash
 python3 -m venv .venv
 ```
 
-No Windows:
-
-```bash
-python -m venv .venv
-```
-
-### 4. Ative o ambiente virtual
-
-No macOS ou Linux:
+Ative o ambiente virtual no macOS/Linux:
 
 ```bash
 source .venv/bin/activate
 ```
 
-No Windows:
+Instale as dependências:
 
 ```bash
-.venv\Scripts\activate
+python -m pip install -r requirements.txt
 ```
 
-### 5. Instale as dependências
+Execute a aplicação:
 
 ```bash
-pip install -r requirements.txt
+python -m streamlit run src/app.py
 ```
 
-### 6. Execute a aplicação
+---
 
-```bash
-streamlit run src/app.py
-```
+## Dados
 
-Após a execução, o Streamlit abrirá automaticamente o dashboard no navegador.
+Os dados de mercado são obtidos através da biblioteca **yfinance**.
 
-## Como utilizar
+Os dados exibidos podem sofrer atrasos ou alterações de acordo com a disponibilidade da fonte e são utilizados neste projeto para fins de estudo e análise.
 
-1. Informe o ticker da ação desejada.
-2. Escolha o período de análise.
-3. Clique em **Analisar ação**.
-4. Visualize os indicadores financeiros.
-5. Analise os gráficos.
-6. Consulte as informações da empresa.
-7. Faça o download dos dados, se desejar.
+---
 
-### Exemplos de tickers
+## Objetivo do projeto
 
-```text
-PETR4
-VALE3
-ITUB4
-BBAS3
-BBDC4
-```
+O **B3 Insight** foi desenvolvido como projeto de estudo e portfólio, aplicando conceitos de análise de dados, visualização de informações financeiras e desenvolvimento de dashboards interativos com Python.
 
-## Indicadores apresentados
-
-O dashboard calcula automaticamente:
-
-- Última cotação
-- Variação percentual
-- Preço máximo
-- Preço mínimo
-- Volume negociado
-
-Também são calculadas duas médias móveis:
-
-- MM20
-- MM50
-
-Esses indicadores auxiliam na análise do comportamento dos preços ao longo do período selecionado.
-
-## Comparação com o Ibovespa
-
-O desempenho da ação é comparado ao Ibovespa utilizando uma normalização com base inicial igual a 100.
-
-Essa abordagem permite comparar a evolução percentual das duas séries, independentemente dos seus valores absolutos.
-
-## Fonte dos dados
-
-Os dados históricos e as informações das empresas são obtidos por meio da biblioteca **yfinance**, que consulta informações disponibilizadas pelo Yahoo Finance.
-
-Os dados podem sofrer atrasos ou alterações na fonte original.
-
-Este projeto possui finalidade exclusivamente educacional e não constitui recomendação de investimento.
-
-## Melhorias futuras
-
-As próximas versões do projeto poderão incluir novas funcionalidades para ampliar as possibilidades de análise e tornar a experiência mais interativa, entre elas:
-
-- Comparação simultânea entre diferentes ações
-- Inclusão de novos indicadores técnicos, como RSI, MACD e Bandas de Bollinger
-- Simulação de estratégias de compra e venda para fins de análise
-- Heatmap dos horários com maior volume de negociações
-- Estatísticas de volatilidade, amplitude e volume por período
-- Novas ferramentas de análise e visualização dos dados
-- Geração de relatórios em PDF com os resultados da análise
-- Aprimoramento da experiência e da interface do dashboard
+---
 
 ## Autora
 
-**Natália Ferreira do Nascimento**
+**Natalia Ferreira DO Nascimento**
 
-Economista | Pós-graduanda em Ciência de Dados.
-
-## Licença
-
-Este projeto foi desenvolvido para fins de estudo e construção de portfólio.
+[GitHub](https://github.com/nataliaferreira-DS)
