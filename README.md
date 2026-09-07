@@ -1,4 +1,4 @@
-# Replay do Pregão B3
+# B3 Insight
 
 Dashboard interativo desenvolvido em Python para análise de ações negociadas na B3.
 
@@ -16,15 +16,13 @@ O projeto permite consultar dados históricos de ações brasileiras, visualizar
 
 ![Volume](imagens/volume.png)
 
-
 ## Sobre o projeto
 
-O Replay do Pregão B3 é um projeto pessoal desenvolvido para aplicar conhecimentos de Python, análise de dados e visualização de informações no contexto do mercado financeiro.
+O B3 Insight é um projeto pessoal desenvolvido para aplicar conhecimentos de Python, análise de dados e visualização de informações no contexto do mercado financeiro.
 
 A aplicação utiliza dados do Yahoo Finance e apresenta as informações em um dashboard desenvolvido com Streamlit. O usuário pode informar o ticker de uma ação negociada na B3, selecionar o período desejado e visualizar indicadores, gráficos e informações da empresa.
 
 O objetivo do projeto é facilitar a análise de ativos por meio de uma interface simples, organizada e interativa.
-
 
 ## Funcionalidades
 
@@ -42,7 +40,6 @@ O objetivo do projeto é facilitar a análise de ativos por meio de uma interfac
 - Visualização dos dados históricos
 - Download dos dados em formato CSV
 
-
 ## Tecnologias utilizadas
 
 - Python
@@ -52,14 +49,13 @@ O objetivo do projeto é facilitar a análise de ativos por meio de uma interfac
 - Plotly
 - yfinance
 
-
 ## Estrutura do projeto
 
 ```text
-Replay-Pregao-B3/
+B3-Insight/
 │
 ├── dados/
-│   └── replay_pregao_b3.csv
+│   └── b3_insight.csv
 │
 ├── imagens/
 │   ├── dashboard.png
@@ -83,27 +79,25 @@ Replay-Pregao-B3/
 ### Organização dos arquivos
 
 | Arquivo | Responsabilidade |
-|----------|------------------|
+|---|---|
 | `app.py` | Interface do dashboard e fluxo principal da aplicação |
 | `config.py` | Configurações gerais do projeto |
 | `dados.py` | Coleta, preparação e limpeza dos dados |
 | `indicadores.py` | Cálculo dos indicadores e formatação dos resultados |
 | `graficos.py` | Construção dos gráficos interativos |
 
-
-
 ## Como executar o projeto
 
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/nataliaferreira-DS/Replay-Pregao-B3.git
+git clone https://github.com/nataliaferreira-DS/B3-Insight.git
 ```
 
 ### 2. Entre na pasta do projeto
 
 ```bash
-cd Replay-Pregao-B3
+cd B3-Insight
 ```
 
 ### 3. Crie um ambiente virtual
@@ -148,7 +142,6 @@ streamlit run src/app.py
 
 Após a execução, o Streamlit abrirá automaticamente o dashboard no navegador.
 
-
 ## Como utilizar
 
 1. Informe o ticker da ação desejada.
@@ -186,19 +179,15 @@ Também são calculadas duas médias móveis:
 
 Esses indicadores auxiliam na análise do comportamento dos preços ao longo do período selecionado.
 
-
-
 ## Comparação com o Ibovespa
 
 O desempenho da ação é comparado ao Ibovespa utilizando uma normalização com base inicial igual a 100.
 
 Essa abordagem permite comparar a evolução percentual das duas séries, independentemente dos seus valores absolutos.
 
-
-
 ## Fonte dos dados
 
-Os dados históricos e as informações das empresas são obtidos por meio da biblioteca **YFinance**, que consulta informações disponibilizadas pelo Yahoo Finance.
+Os dados históricos e as informações das empresas são obtidos por meio da biblioteca **yfinance**, que consulta informações disponibilizadas pelo Yahoo Finance.
 
 Os dados podem sofrer atrasos ou alterações na fonte original.
 
@@ -208,20 +197,18 @@ Este projeto possui finalidade exclusivamente educacional e não constitui recom
 
 As próximas versões do projeto poderão incluir novas funcionalidades para ampliar as possibilidades de análise e tornar a experiência mais interativa, entre elas:
 
-- Reprodução da evolução do pregão (Replay do Pregão), permitindo acompanhar a formação dos candles ao longo do período selecionado.
-- Controles de reprodução (play, pausa, avançar e retroceder) durante o replay.
-- Comparação simultânea entre diferentes ações.
-- Inclusão de novos indicadores técnicos, como RSI, MACD e Bandas de Bollinger.
-- Simulação de compra e venda para análise de estratégias de investimento.
-- Heatmap dos horários com maior volume de negociações.
-- Estatísticas de volatilidade, amplitude e volume por período.
-- Geração de relatórios em PDF com os resultados da análise.
-- Publicação da aplicação no Streamlit Community Cloud.
-
+- Comparação simultânea entre diferentes ações
+- Inclusão de novos indicadores técnicos, como RSI, MACD e Bandas de Bollinger
+- Simulação de estratégias de compra e venda para fins de análise
+- Heatmap dos horários com maior volume de negociações
+- Estatísticas de volatilidade, amplitude e volume por período
+- Novas ferramentas de análise e visualização dos dados
+- Geração de relatórios em PDF com os resultados da análise
+- Aprimoramento da experiência e da interface do dashboard
 
 ## Autora
 
-*Natália Ferreira do Nascimento*
+**Natália Ferreira do Nascimento**
 
 Economista | Pós-graduanda em Ciência de Dados.
 
