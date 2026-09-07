@@ -200,6 +200,10 @@ def criar_grafico_candlestick(
         )
     )
 
+    # Em períodos mais longos, a legenda fica à esquerda,
+    # reproduzindo o visual mais limpo usado em 6mo e 1y.
+    periodo_longo = periodo in {"6mo", "1y"}
+
     fig.update_layout(
         title=dict(
             text=f"{ticker_exibicao} — Candlestick ({periodo})",
@@ -218,8 +222,8 @@ def criar_grafico_candlestick(
             orientation="h",
             y=1.02,
             yanchor="bottom",
-            x=1,
-            xanchor="right"
+            x=0.01 if periodo_longo else 1,
+            xanchor="left" if periodo_longo else "right"
         ),
         hoverlabel=dict(
             bgcolor="white",
