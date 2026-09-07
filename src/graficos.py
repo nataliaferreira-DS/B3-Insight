@@ -74,22 +74,49 @@ def configurar_eixo_tempo(
     coluna_data: pd.Series,
     mostrar_rangeslider: bool = False
 ) -> None:
-    """Aplica uma configuração de eixo temporal mais limpa e responsiva."""
+    """
+    Padroniza o eixo temporal de acordo com a duração real da série.
+
+    Regras visuais do projeto:
+    - até 2 dias: hora (HH:MM)
+    - até 10 dias: dia/mês
+    - até 120 dias: dia/mês
+    - acima de 120 dias: mês/ano
+
+    Assim, todos os gráficos seguem a mesma lógica sem depender
+    das escolhas automáticas de formatação do Plotly.
+    """
 
     rangebreaks = []
+    tickformat = "%d/%m"
+    nticks = 8
 
     if not coluna_data.empty:
         datas = pd.to_datetime(coluna_data).sort_values()
         duracao = datas.max() - datas.min()
 
-        # Remove os fins de semana quando o período cobre vários dias.
+        # Define explicitamente o formato do eixo X.
+        if duracao <= pd.Timedelta(days=2):
+            tickformat = "%H:%M"
+            nticks = 8
+        elif duracao <= pd.Timedelta(days=10):
+            tickformat = "%d/%m"
+            nticks = 6
+        elif duracao <= pd.Timedelta(days=120):
+            tickformat = "%d/%m"
+            nticks = 8
+        else:
+            tickformat = "%b/%Y"
+            nticks = 7
+
+        # Remove fins de semana em séries que cobrem vários dias.
         if duracao >= pd.Timedelta(days=3):
             rangebreaks.append(
                 dict(bounds=["sat", "mon"])
             )
 
         # Detecta séries intradiárias pela presença de vários registros
-        # no mesmo dia. Nesse caso, comprime somente as horas sem pregão.
+        # no mesmo dia e comprime somente as horas sem pregão.
         serie_datas = pd.Series(datas)
 
         registros_por_dia = (
@@ -127,19 +154,9 @@ def configurar_eixo_tempo(
         rangeslider_visible=mostrar_rangeslider,
         showgrid=True,
         gridcolor="rgba(0, 0, 0, 0.08)",
-        nticks=10,
-        tickformatstops=[
-            dict(dtickrange=[None, 60 * 60 * 1000], value="%H:%M"),
-            dict(
-                dtickrange=[60 * 60 * 1000, 24 * 60 * 60 * 1000],
-                value="%d/%m %H:%M"
-            ),
-            dict(
-                dtickrange=[24 * 60 * 60 * 1000, "M1"],
-                value="%d/%m"
-            ),
-            dict(dtickrange=["M1", None], value="%b/%Y")
-        ],
+        nticks=nticks,
+        tickformat=tickformat,
+        tickangle=0,
         rangebreaks=rangebreaks
     )
 
@@ -200,10 +217,6 @@ def criar_grafico_candlestick(
         )
     )
 
-    # Em períodos mais longos, a legenda fica à esquerda,
-    # reproduzindo o visual mais limpo usado em 6mo e 1y.
-    periodo_longo = periodo in {"6mo", "1y"}
-
     fig.update_layout(
         title=dict(
             text=f"{ticker_exibicao} — Candlestick ({periodo})",
@@ -222,8 +235,8 @@ def criar_grafico_candlestick(
             orientation="h",
             y=1.02,
             yanchor="bottom",
-            x=0.01 if periodo_longo else 1,
-            xanchor="left" if periodo_longo else "right"
+            x=0.01,
+            xanchor="left"
         ),
         hoverlabel=dict(
             bgcolor="white",
@@ -463,8 +476,8 @@ def criar_grafico_comparacao(
             orientation="h",
             y=1.02,
             yanchor="bottom",
-            x=1,
-            xanchor="right"
+            x=0.01,
+            xanchor="left"
         )
     )
 
