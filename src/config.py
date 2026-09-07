@@ -3,7 +3,7 @@
 # ==========================
 
 # Nome que aparecerá no título da página
-TITULO_APP = "Replay do Pregão B3"
+TITULO_APP = "B3 Insight"
 
 # Texto explicativo mostrado logo abaixo do título
 DESCRICAO_APP = (
