@@ -79,14 +79,48 @@ def configurar_eixo_tempo(
     rangebreaks = []
 
     if not coluna_data.empty:
-        datas = pd.to_datetime(coluna_data)
+        datas = pd.to_datetime(coluna_data).sort_values()
         duracao = datas.max() - datas.min()
 
-        # Em períodos com vários dias, remove os espaços vazios
-        # correspondentes aos fins de semana.
+        # Remove os fins de semana quando o período cobre vários dias.
         if duracao >= pd.Timedelta(days=3):
             rangebreaks.append(
                 dict(bounds=["sat", "mon"])
+            )
+
+        # Detecta séries intradiárias pela presença de vários registros
+        # no mesmo dia. Nesse caso, comprime somente as horas sem pregão.
+        serie_datas = pd.Series(datas)
+
+        registros_por_dia = (
+            serie_datas
+            .dt.normalize()
+            .value_counts()
+        )
+
+        serie_intradiaria = (
+            not registros_por_dia.empty
+            and registros_por_dia.max() > 1
+        )
+
+        if serie_intradiaria:
+            minutos_do_dia = (
+                serie_datas.dt.hour * 60
+                + serie_datas.dt.minute
+            )
+
+            primeiro_minuto = int(minutos_do_dia.min())
+            ultimo_minuto = int(minutos_do_dia.max())
+
+            # Pequena folga para não cortar o primeiro ou o último candle.
+            abertura = max(0, primeiro_minuto - 5) / 60
+            fechamento = min(24 * 60, ultimo_minuto + 5) / 60
+
+            rangebreaks.append(
+                dict(
+                    bounds=[fechamento, abertura],
+                    pattern="hour"
+                )
             )
 
     fig.update_xaxes(
@@ -170,20 +204,22 @@ def criar_grafico_candlestick(
         title=dict(
             text=f"{ticker_exibicao} — Candlestick ({periodo})",
             x=0.01,
-            xanchor="left"
+            y=0.98,
+            xanchor="left",
+            yanchor="top"
         ),
         xaxis_title=None,
         yaxis_title="Preço (R$)",
         template="plotly_white",
         height=620,
         hovermode="x unified",
-        margin=dict(l=20, r=20, t=65, b=20),
+        margin=dict(l=20, r=20, t=85, b=20),
         legend=dict(
             orientation="h",
-            y=1.04,
+            y=1.02,
             yanchor="bottom",
-            x=0,
-            xanchor="left"
+            x=1,
+            xanchor="right"
         ),
         hoverlabel=dict(
             bgcolor="white",
@@ -409,20 +445,22 @@ def criar_grafico_comparacao(
         title=dict(
             text=f"{ticker_exibicao} vs. Ibovespa",
             x=0.01,
-            xanchor="left"
+            y=0.98,
+            xanchor="left",
+            yanchor="top"
         ),
         xaxis_title=None,
         yaxis_title="Desempenho normalizado (base 100)",
         template="plotly_white",
         height=500,
         hovermode="x unified",
-        margin=dict(l=20, r=20, t=60, b=20),
+        margin=dict(l=20, r=20, t=80, b=20),
         legend=dict(
             orientation="h",
-            y=1.04,
+            y=1.02,
             yanchor="bottom",
-            x=0,
-            xanchor="left"
+            x=1,
+            xanchor="right"
         )
     )
 
