@@ -134,7 +134,7 @@ python -m streamlit run src/app.py
 
 Os dados de mercado são obtidos através da biblioteca **yfinance**.
 
-Os dados exibidos podem sofrer atrasos ou alterações de acordo com a disponibilidade da fonte e são utilizados neste projeto para fins de estudo e análise.
+Os dados exibidos podem sofrer   atrasos ou alterações de acordo com a disponibilidade da fonte e são utilizados neste projeto para fins de estudo e análise.
 
 ---
 
@@ -146,6 +146,6 @@ O **B3 Insight** foi desenvolvido como projeto de estudo e portfólio, aplicando
 
 ## Autora
 
-**Natalia Ferreira DO Nascimento**
+**Natalia Ferreira Do Nascimento**
 
 [GitHub](https://github.com/nataliaferreira-DS)
